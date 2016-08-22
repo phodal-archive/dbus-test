@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 import gi
 
 from account import MyBuddyCallback, MyAccountCallback
@@ -5,7 +7,11 @@ from account import MyBuddyCallback, MyAccountCallback
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, Gdk
 import pjsua as pj
+
 import dbus
+import dbus.service
+from dbus.mainloop.glib import DBusGMainLoop
+import gobject
 
 LOG_LEVEL = 3
 pending_pres = None
@@ -35,7 +41,7 @@ class MyWindow(Gtk.Window):
     def __init__(self):
         self.draw_ui()
         self.init_pjsua()
-
+        self.bus = dbus.SessionBus()
 
     def init_pjsua(self):
         lib = pj.Lib()
@@ -99,13 +105,44 @@ class MyWindow(Gtk.Window):
 
     def connect_server(self, widget):
         self.buddy = self.acc.add_buddy(self.my_sip_uri, cb=MyBuddyCallback())
+
+        service = self.bus.get_object('com.example.service', "/com/example/service")
+        self._message = service.get_dbus_method('get_message', 'com.example.service.Message')
+
         self.buddy.subscribe()
 
     def send_message(self, widget):
         print("Send Message")
 
 
+class MyDBUSService(dbus.service.Object):
+    def __init__(self, message):
+        self._message = message
+
+    def run(self):
+        dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
+        bus_name = dbus.service.BusName("com.example.service", dbus.SessionBus())
+        dbus.service.Object.__init__(self, bus_name, "/com/example/service")
+
+        self._loop = gobject.MainLoop()
+        print "Service running..."
+        self._loop.run()
+        print "Service stopped"
+
+    @dbus.service.method("com.example.service.Message", in_signature='', out_signature='s')
+    def get_message(self):
+        print "  sending message"
+        return self._message
+
+    @dbus.service.method("com.example.service.Quit", in_signature='', out_signature='')
+    def quit(self):
+        print "  shutting down"
+        self._loop.quit()
+
+
 win = MyWindow()
 win.connect("delete-event", Gtk.main_quit)
 win.show_all()
+
+MyDBUSService("hello")
 Gtk.main()

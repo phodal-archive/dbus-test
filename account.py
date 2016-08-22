@@ -1,8 +1,10 @@
 import pjsua as pj
+import dbus
 
 class MyAccountCallback(pj.AccountCallback):
     def __init__(self, account=None):
         pj.AccountCallback.__init__(self, account)
+        self.bus = dbus.SessionBus()
 
     def on_incoming_subscribe(self, buddy, from_uri, contact_uri, pres):
         global pending_pres, pending_uri
@@ -13,6 +15,10 @@ class MyAccountCallback(pj.AccountCallback):
         print 'Press "A" to accept and add, "R" to reject the request'
         pending_pres = pres
         pending_uri = from_uri
+
+        service = self.bus.get_object('com.example.service', "/com/example/service")
+        self._message = service.get_dbus_method('get_message', 'com.example.service.Message')
+
         return (202, None)
 
 
