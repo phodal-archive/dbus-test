@@ -103,10 +103,10 @@ class MyWindow(Gtk.Window):
             self.acc = lib.create_account_for_transport(transport, cb=MyAccountCallback())
             self.acc.set_basic_status(True)
 
-            my_sip_uri = "sip:" + transport.info().host + \
+            self.my_sip_uri = "sip:" + transport.info().host + \
                          ":" + str(transport.info().port)
 
-            sip_address_label.set_text(my_sip_uri)
+            sip_address_label.set_text(self.my_sip_uri)
             self.buddy = None
 
         except pj.Error, e:
@@ -115,7 +115,7 @@ class MyWindow(Gtk.Window):
             lib = None
 
     def connect_server(self, widget):
-        self.buddy = self.acc.add_buddy(input, cb=MyBuddyCallback())
+        self.buddy = self.acc.add_buddy(self.my_sip_uri, cb=MyBuddyCallback())
         self.buddy.subscribe()
 
     def send_message(self, widget):
