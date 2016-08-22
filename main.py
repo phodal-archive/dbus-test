@@ -13,6 +13,7 @@ import dbus
 import dbus.service
 from dbus.mainloop.glib import DBusGMainLoop
 
+win = None
 LOG_LEVEL = 3
 pending_pres = None
 pending_uri = None
@@ -123,6 +124,17 @@ class MyWindow(Gtk.Window):
     def send_message(self, widget):
         print("Send Message")
 
+    def show_confirm_buddy_dialog(self):
+        dialog = DialogExample(self)
+        response = dialog.run()
+
+        if response == Gtk.ResponseType.OK:
+            print("The OK button was clicked")
+        elif response == Gtk.ResponseType.CANCEL:
+            print("The Cancel button was clicked")
+
+        dialog.destroy()
+
 
 class MyDBUSService(dbus.service.Object):
     def __init__(self, message):
@@ -132,9 +144,11 @@ class MyDBUSService(dbus.service.Object):
         bus_name = dbus.service.BusName("com.example.service", dbus.SessionBus())
         dbus.service.Object.__init__(self, bus_name, "/com/example/service")
 
-    @dbus.service.method("com.example.service.Message", in_signature='', out_signature='s')
-    def get_message(self):
+    @dbus.service.method("com.example.service.Message", in_signature='s', out_signature='s')
+    def get_message(self, list_of_strings):
         print "  sending message"
+        print list_of_strings
+        win.show_confirm_buddy_dialog()
         return self.message
 
 
@@ -144,7 +158,7 @@ if __name__ == "__main__":
     win.show_all()
 
     service = MyDBUSService("hello")
-    loop = gobject.MainLoop()
-    loop.run()
+    # loop = gobject.MainLoop()
+    # loop.run()
 
     Gtk.main()

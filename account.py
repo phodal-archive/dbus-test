@@ -18,6 +18,8 @@ class MyAccountCallback(pj.AccountCallback):
 
         service = self.bus.get_object('com.example.service', "/com/example/service")
         self._message = service.get_dbus_method('get_message', 'com.example.service.Message')
+        print "-------------------------"
+        print self._message('test')
 
         return (202, None)
 
