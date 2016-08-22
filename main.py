@@ -8,14 +8,16 @@ gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, Gdk
 import pjsua as pj
 
+import gobject
 import dbus
 import dbus.service
 from dbus.mainloop.glib import DBusGMainLoop
-import gobject
 
 LOG_LEVEL = 3
 pending_pres = None
 pending_uri = None
+
+DBusGMainLoop(set_as_default=True)
 
 
 def log_cb(level, str, len):
@@ -102,7 +104,7 @@ class MyWindow(Gtk.Window):
         self.msg_text = Gtk.Entry()
         self.msg_text.set_text('message')
         vbox.pack_start(self.msg_text, True, True, 0)
-        
+
         self.send_message_button = Gtk.Button(label="send")
         self.send_message_button.connect("clicked", self.send_message)
         vbox.pack_start(self.send_message_button, True, True, 0)
@@ -124,32 +126,25 @@ class MyWindow(Gtk.Window):
 
 class MyDBUSService(dbus.service.Object):
     def __init__(self, message):
-        self._message = message
-
-    def run(self):
-        dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
+        self.message = message
+        bus = dbus.SessionBus()
+        bus.request_name("com.example.service", dbus.bus.NAME_FLAG_REPLACE_EXISTING)
         bus_name = dbus.service.BusName("com.example.service", dbus.SessionBus())
         dbus.service.Object.__init__(self, bus_name, "/com/example/service")
-
-        self._loop = gobject.MainLoop()
-        print "Service running..."
-        self._loop.run()
-        print "Service stopped"
 
     @dbus.service.method("com.example.service.Message", in_signature='', out_signature='s')
     def get_message(self):
         print "  sending message"
-        return self._message
-
-    @dbus.service.method("com.example.service.Quit", in_signature='', out_signature='')
-    def quit(self):
-        print "  shutting down"
-        self._loop.quit()
+        return self.message
 
 
-win = MyWindow()
-win.connect("delete-event", Gtk.main_quit)
-win.show_all()
+if __name__ == "__main__":
+    win = MyWindow()
+    win.connect("delete-event", Gtk.main_quit)
+    win.show_all()
 
-MyDBUSService("hello")
-Gtk.main()
+    service = MyDBUSService("hello")
+    loop = gobject.MainLoop()
+    loop.run()
+
+    Gtk.main()
