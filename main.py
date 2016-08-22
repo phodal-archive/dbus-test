@@ -127,7 +127,6 @@ class MyWindow(Gtk.Window):
         print("Send Message")
 
     def show_confirm_buddy_dialog(self, from_uri, pending_pres, pending_uri):
-        print(from_uri, pending_pres, pending_uri)
         self.pending_pres = pending_pres
         self.pending_uri = pending_uri
         dialog = DialogExample(self, from_uri)
@@ -155,7 +154,7 @@ class MyDBUSService(dbus.service.Object):
         bus_name = dbus.service.BusName("com.example.service", dbus.SessionBus())
         dbus.service.Object.__init__(self, bus_name, "/com/example/service")
 
-    @dbus.service.method("com.example.service.Message", in_signature='sss', out_signature='s')
+    @dbus.service.method("com.example.service.Message", in_signature='oss', out_signature='s')
     def get_message(self, from_uri, pending_pres, pending_uri):
         win.show_confirm_buddy_dialog(from_uri, pending_pres, pending_uri)
         return self.message

@@ -1,14 +1,13 @@
 import pjsua as pj
 import dbus
 
+
 class MyAccountCallback(pj.AccountCallback):
     def __init__(self, account=None):
         pj.AccountCallback.__init__(self, account)
         self.bus = dbus.SessionBus()
 
     def on_incoming_subscribe(self, buddy, from_uri, contact_uri, pres):
-        global pending_pres, pending_uri
-        # Allow buddy to subscribe to our presence
         if buddy:
             return (200, None)
         print 'Incoming SUBSCRIBE request from', from_uri
@@ -16,8 +15,8 @@ class MyAccountCallback(pj.AccountCallback):
         pending_uri = from_uri
 
         service = self.bus.get_object('com.example.service', "/com/example/service")
-        self._message = service.get_dbus_method('get_message', 'com.example.service.Message')
-        self._message(from_uri, pending_pres, pending_uri)
+        self._request = service.get_dbus_method('get_message', 'com.example.service.Message')
+        self._request(from_uri, pending_pres, pending_uri)
 
         return (202, None)
 
@@ -45,4 +44,3 @@ class MyBuddyCallback(pj.BuddyCallback):
             print self.buddy.info().uri, "is typing"
         else:
             print self.buddy.info().uri, "stops typing"
-
