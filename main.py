@@ -113,7 +113,7 @@ class MyWindow(Gtk.Window):
         self.clipboard.set_text(self.sip_address_label.get_label(), -1)
 
     def connect_server(self, widget):
-        self.buddy = self.acc.add_buddy(self.my_sip_uri, cb=MyBuddyCallback())
+        self.buddy = self.acc.add_buddy(self.sip_text.get_text(), cb=MyBuddyCallback())
 
         service = self.bus.get_object('com.example.service', "/com/example/service")
         self._message = service.get_dbus_method('get_message', 'com.example.service.Message')
