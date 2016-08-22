@@ -77,25 +77,32 @@ class MyWindow(Gtk.Window):
     def draw_ui(self):
         Gtk.Window.__init__(self, title="Hello World")
         self.set_size_request(200, 100)
+
         self.clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
+
         vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
         self.add(vbox)
+
         self.sip_address_label = Gtk.Button()
         self.sip_address_label.set_label("SIP Address")
         self.sip_address_label.connect("clicked", self.copy_text)
-        self.clipboard.set_text(self.sip_address_label.get_label(), -1)
         vbox.pack_start(self.sip_address_label, True, True, 0)
+
         self.sip_text = Gtk.Entry()
         self.sip_text.set_text('sip')
         vbox.pack_start(self.sip_text, True, True, 0)
+
         hbox = Gtk.Box(spacing=6)
         vbox.pack_start(hbox, True, True, 0)
+
         self.connect_button = Gtk.Button(label="connect")
         self.connect_button.connect("clicked", self.connect_server)
         hbox.pack_start(self.connect_button, True, True, 0)
+
         self.msg_text = Gtk.Entry()
         self.msg_text.set_text('message')
         vbox.pack_start(self.msg_text, True, True, 0)
+        
         self.send_message_button = Gtk.Button(label="send")
         self.send_message_button.connect("clicked", self.send_message)
         vbox.pack_start(self.send_message_button, True, True, 0)
