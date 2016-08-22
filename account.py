@@ -12,14 +12,12 @@ class MyAccountCallback(pj.AccountCallback):
         if buddy:
             return (200, None)
         print 'Incoming SUBSCRIBE request from', from_uri
-        print 'Press "A" to accept and add, "R" to reject the request'
         pending_pres = pres
         pending_uri = from_uri
 
         service = self.bus.get_object('com.example.service', "/com/example/service")
         self._message = service.get_dbus_method('get_message', 'com.example.service.Message')
-        print "-------------------------"
-        print self._message('test')
+        self._message(from_uri, pending_pres, pending_uri)
 
         return (202, None)
 

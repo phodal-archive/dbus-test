@@ -15,8 +15,6 @@ from dbus.mainloop.glib import DBusGMainLoop
 
 win = None
 LOG_LEVEL = 3
-pending_pres = None
-pending_uri = None
 
 DBusGMainLoop(set_as_default=True)
 
@@ -26,14 +24,14 @@ def log_cb(level, str, len):
 
 
 class DialogExample(Gtk.Dialog):
-    def __init__(self, parent):
+    def __init__(self, parent, from_uri):
         Gtk.Dialog.__init__(self, "My Dialog", parent, 0,
                             (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
                              Gtk.STOCK_OK, Gtk.ResponseType.OK))
 
-        self.set_default_size(150, 100)
+        self.set_default_size(300, 150)
 
-        label = Gtk.Label("This is a dialog to display additional information")
+        label = Gtk.Label("Incoming SUBSCRIBE request from" + from_uri)
 
         box = self.get_content_area()
         box.add(label)
@@ -42,12 +40,16 @@ class DialogExample(Gtk.Dialog):
 
 class MyWindow(Gtk.Window):
     def __init__(self):
+        self.pending_pres = None
+        self.pending_uri = None
+
         self.draw_ui()
         self.init_pjsua()
         self.bus = dbus.SessionBus()
 
     def init_pjsua(self):
         lib = pj.Lib()
+
         try:
             # Init library with default config and some customized
             # logging config.
@@ -124,12 +126,21 @@ class MyWindow(Gtk.Window):
     def send_message(self, widget):
         print("Send Message")
 
-    def show_confirm_buddy_dialog(self):
-        dialog = DialogExample(self)
+    def show_confirm_buddy_dialog(self, from_uri, pending_pres, pending_uri):
+        print(from_uri, pending_pres, pending_uri)
+        self.pending_pres = pending_pres
+        self.pending_uri = pending_uri
+        dialog = DialogExample(self, from_uri)
         response = dialog.run()
 
         if response == Gtk.ResponseType.OK:
             print("The OK button was clicked")
+
+            self.acc.pres_notify(self.pending_pres, pj.SubscriptionState.ACTIVE)
+            buddy = self.acc.add_buddy(self.pending_uri, cb=MyBuddyCallback())
+            buddy.subscribe()
+            self.pending_pres = None
+            self.pending_uri = None
         elif response == Gtk.ResponseType.CANCEL:
             print("The Cancel button was clicked")
 
@@ -144,11 +155,9 @@ class MyDBUSService(dbus.service.Object):
         bus_name = dbus.service.BusName("com.example.service", dbus.SessionBus())
         dbus.service.Object.__init__(self, bus_name, "/com/example/service")
 
-    @dbus.service.method("com.example.service.Message", in_signature='s', out_signature='s')
-    def get_message(self, list_of_strings):
-        print "  sending message"
-        print list_of_strings
-        win.show_confirm_buddy_dialog()
+    @dbus.service.method("com.example.service.Message", in_signature='sss', out_signature='s')
+    def get_message(self, from_uri, pending_pres, pending_uri):
+        win.show_confirm_buddy_dialog(from_uri, pending_pres, pending_uri)
         return self.message
 
 
