@@ -11,6 +11,20 @@ pending_uri = None
 def log_cb(level, str, len):
     print str,
 
+class DialogExample(Gtk.Dialog):
+    def __init__(self, parent):
+        Gtk.Dialog.__init__(self, "My Dialog", parent, 0,
+            (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
+             Gtk.STOCK_OK, Gtk.ResponseType.OK))
+
+        self.set_default_size(150, 100)
+
+        label = Gtk.Label("This is a dialog to display additional information")
+
+        box = self.get_content_area()
+        box.add(label)
+        self.show_all()
+
 class MyAccountCallback(pj.AccountCallback):
     def __init__(self, account=None):
         pj.AccountCallback.__init__(self, account)
@@ -71,17 +85,17 @@ class MyWindow(Gtk.Window):
         hbox = Gtk.Box(spacing=6)
         vbox.pack_start(hbox, True, True, 0)
 
-        self.button = Gtk.Button(label="connect")
-        self.button.connect("clicked", self.connect_server)
-        hbox.pack_start(self.button, True, True, 0)
+        self.connect_button = Gtk.Button(label="connect")
+        self.connect_button.connect("clicked", self.connect_server)
+        hbox.pack_start(self.connect_button, True, True, 0)
 
         self.msg_text = Gtk.Entry()
         self.msg_text.set_text('message')
         vbox.pack_start(self.msg_text, True, True, 0)
 
-        self.button = Gtk.Button(label="send")
-        self.button.connect("clicked", self.send_message)
-        vbox.pack_start(self.button, True, True, 0)
+        self.send_message_button = Gtk.Button(label="send")
+        self.send_message_button.connect("clicked", self.send_message)
+        vbox.pack_start(self.send_message_button, True, True, 0)
 
         lib = pj.Lib()
 
