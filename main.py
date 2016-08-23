@@ -6,9 +6,10 @@ from account import MyBuddyCallback, MyAccountCallback
 
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, Gdk
+from gi.repository import GObject as gobject
+
 import pjsua as pj
 
-import gobject
 import dbus
 import dbus.service
 from dbus.mainloop.glib import DBusGMainLoop
@@ -17,7 +18,7 @@ win = None
 LOG_LEVEL = 3
 
 DBusGMainLoop(set_as_default=True)
-
+loop = gobject.MainLoop()
 
 def log_cb(level, str, len):
     print str,
@@ -147,15 +148,18 @@ class MyWindow(Gtk.Window):
 
 
 class MyDBUSService(dbus.service.Object):
-    def __init__(self, message):
-        self.message = message
+    def __init__(self, loop):
+        self.message = "-----------"
         bus = dbus.SessionBus()
+        self.mainloop = loop
+
         bus.request_name("com.example.service", dbus.bus.NAME_FLAG_REPLACE_EXISTING)
         bus_name = dbus.service.BusName("com.example.service", dbus.SessionBus())
         dbus.service.Object.__init__(self, bus_name, "/com/example/service")
 
-    @dbus.service.method("com.example.service.Message", in_signature='oss', out_signature='s')
+    @dbus.service.method("com.example.service.Message", in_signature='sss', out_signature='s')
     def get_message(self, from_uri, pending_pres, pending_uri):
+        print "get_message from from_uri"
         win.show_confirm_buddy_dialog(from_uri, pending_pres, pending_uri)
         return self.message
 
@@ -165,8 +169,7 @@ if __name__ == "__main__":
     win.connect("delete-event", Gtk.main_quit)
     win.show_all()
 
-    service = MyDBUSService("hello")
-    # loop = gobject.MainLoop()
-    # loop.run()
+    service = MyDBUSService(loop)
 
     Gtk.main()
+    loop.run()

@@ -16,7 +16,7 @@ class MyAccountCallback(pj.AccountCallback):
 
         service = self.bus.get_object('com.example.service', "/com/example/service")
         self._request = service.get_dbus_method('get_message', 'com.example.service.Message')
-        self._request(from_uri, pending_pres, pending_uri)
+        self._request(str(from_uri), pending_pres, str(pending_uri))
 
         return (202, None)
 
